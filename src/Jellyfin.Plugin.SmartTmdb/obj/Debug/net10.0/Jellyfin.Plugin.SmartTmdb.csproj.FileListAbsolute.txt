@@ -1,0 +1,14 @@
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.csproj.AssemblyReference.cache
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.GeneratedMSBuildEditorConfig.editorconfig
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.AssemblyInfoInputs.cache
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.AssemblyInfo.cs
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.csproj.CoreCompileInputs.cache
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.xml
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\bin\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.deps.json
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\bin\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.dll
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\bin\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.pdb
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\bin\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.xml
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.dll
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\refint\Jellyfin.Plugin.SmartTmdb.dll
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\Jellyfin.Plugin.SmartTmdb.pdb
+C:\Dev\Jellyfin.Plugin.SmartTmdb\src\Jellyfin.Plugin.SmartTmdb\obj\Debug\net10.0\ref\Jellyfin.Plugin.SmartTmdb.dll

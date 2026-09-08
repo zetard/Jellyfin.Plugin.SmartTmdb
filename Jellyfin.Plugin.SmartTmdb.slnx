@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Jellyfin.Plugin.SmartTmdb.Tests/Jellyfin.Plugin.SmartTmdb.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -3,7 +3,7 @@
 ## Backlog
 
 - [x] Task 0 — repository guardrails and API verification
-- [ ] Task 1 — solution and compile-only plugin skeleton
+- [x] Task 1 — solution and compile-only plugin skeleton
 - [ ] Task 2 — pure domain model, aggregation, and scoring
 - [ ] Task 3 — TMDB client and raw cache
 - [ ] Task 4 — local candidate resolution and user data
@@ -15,26 +15,36 @@
 
 ## Current status
 
-Task 0 in progress. No production code has been written.
+Task 1 complete. Solution, production project, test project, plugin skeleton, and build.yaml created. Build and tests pass.
 
 ## Commands and results
 
 ```
 cd C:\Dev\Jellyfin.Plugin.SmartTmdb
-git rev-parse HEAD
-6c073e19ddf604b2369c638716164fdab4c952dc
-```
+dotnet restore
+  Restored Jellyfin.Plugin.SmartTmdb (production)
+  Restored Jellyfin.Plugin.SmartTmdb.Tests (test)
 
-Verification read-only commands run against `C:\Dev\_reference\jellyfin-v12`:
-- `grep` for interface declarations: `IRemoteSimilarItemsProvider`, `SimilarItemReference`, `SimilarItemsQuery`, `MetadataPluginType`, `BasePlugin<T>`, `IHasWebPages`, `IPluginServiceRegistrator`, `ILibraryManager`, `InternalItemsQuery`, `IUserDataManager`, `ISimilarItemsManager`, `MetadataProvider`, `BaseItemKind`, `UserItemData`
-- `read` of exact source files at paths listed in Discrepancies below
-- `dotnet new classlib` + `dotnet add package Jellyfin.Controller --version 12.0.0` to confirm package exists and targets `net10.0`
-- `dotnet add package Microsoft.Extensions.Http --version 10.0.11` to confirm availability
-- Temporary test project cleaned up after verification
+dotnet build
+  Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+dotnet test
+  Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 9 ms
+
+dotnet build --no-restore
+  Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+dotnet test --no-build
+  Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 9 ms
+```
 
 ## Decisions
 
-- None required. All interfaces and package assumptions verified successfully.
+- None required. All interfaces and package assumptions verified successfully during Task 0.
 
 ## Discrepancies
 
@@ -48,6 +58,6 @@ Verification read-only commands run against `C:\Dev\_reference\jellyfin-v12`:
 
 ## Remaining risks
 
-- The `Score` type discrepancy must be resolved during Task 1 to compile.
+- The `Score` type discrepancy must be resolved during Task 2 to compile.
 - `build.yaml` format should be confirmed against the actual Jellyfin plugin repository requirements before Task 7.
 - `JELLYFIN_SMART_TMDB_TOKEN` precedence logic must be verified against actual environment variable behavior during Task 6.
