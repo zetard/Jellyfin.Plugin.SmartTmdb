@@ -4,9 +4,9 @@
 
 - [x] Task 0 — repository guardrails and API verification
 - [x] Task 1 — solution and compile-only plugin skeleton
-- [ ] Task 2 — pure domain model, aggregation, and scoring
-- [ ] Task 3 — TMDB client and raw cache
-- [ ] Task 4 — local candidate resolution and user data
+- [x] Task 2 — pure domain model, aggregation, and scoring
+- [x] Task 3 — TMDB client and raw cache
+- [x] Task 4 — local candidate resolution and user data
 - [ ] Task 5 — working remote similar-items provider
 - [ ] Task 6 — full dashboard configuration
 - [ ] Task 7 — packaging and operator documentation
@@ -15,15 +15,14 @@
 
 ## Current status
 
-Task 1 complete. Solution, production project, test project, plugin skeleton, and build.yaml created. Build and tests pass.
+Task 4 complete. `ILocalMovieResolver` and `LocalMovieResolver` implemented to batch-resolve TMDB IDs to local `Movie` items using `ILibraryManager.GetItemList(InternalItemsQuery)` with `HasAnyProviderIds` filtering. Per-user `UserItemData` is fetched via `IUserDataManager.GetUserDataBatch` and returned in a `LocalMovieResolution` wrapper. Service registration updated in `PluginServiceRegistrator`. Unit tests cover matching, non-matching, user data attachment, empty results, and empty input. Build and tests pass.
 
 ## Commands and results
 
 ```
 cd C:\Dev\Jellyfin.Plugin.SmartTmdb
-dotnet restore
-  Restored Jellyfin.Plugin.SmartTmdb (production)
-  Restored Jellyfin.Plugin.SmartTmdb.Tests (test)
+dotnet format --verify-no-changes
+  No formatting changes required.
 
 dotnet build
   Build succeeded.
@@ -31,15 +30,7 @@ dotnet build
     0 Error(s)
 
 dotnet test
-  Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 9 ms
-
-dotnet build --no-restore
-  Build succeeded.
-    0 Warning(s)
-    0 Error(s)
-
-dotnet test --no-build
-  Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: 9 ms
+  Passed!  - Failed: 0, Passed: 63, Skipped: 0, Total: 63, Duration: 105 ms
 ```
 
 ## Decisions
@@ -58,6 +49,5 @@ dotnet test --no-build
 
 ## Remaining risks
 
-- The `Score` type discrepancy must be resolved during Task 2 to compile.
 - `build.yaml` format should be confirmed against the actual Jellyfin plugin repository requirements before Task 7.
 - `JELLYFIN_SMART_TMDB_TOKEN` precedence logic must be verified against actual environment variable behavior during Task 6.

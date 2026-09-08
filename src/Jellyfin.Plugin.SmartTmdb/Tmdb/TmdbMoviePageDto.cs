@@ -16,6 +16,11 @@ public class TmdbMoviePageDto
     public int TotalPages { get; set; }
 
     /// <summary>
+    /// Gets or sets the total results.
+    /// </summary>
+    public int TotalResults { get; set; }
+
+    /// <summary>
     /// Gets or sets the results.
     /// </summary>
     public List<TmdbMovieResultDto>? Results { get; set; }

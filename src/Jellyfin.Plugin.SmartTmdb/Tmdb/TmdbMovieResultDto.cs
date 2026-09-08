@@ -49,4 +49,24 @@ public sealed class TmdbMovieResultDto
     /// Gets or sets a value indicating whether this is adult.
     /// </summary>
     public bool Adult { get; set; }
+
+    /// <summary>
+    /// Gets or sets the backdrop path.
+    /// </summary>
+    public string? BackdropPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the poster path.
+    /// </summary>
+    public string? PosterPath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the overview.
+    /// </summary>
+    public string? Overview { get; set; }
+
+    /// <summary>
+    /// Gets or sets the runtime in minutes.
+    /// </summary>
+    public int? Runtime { get; set; }
 }
