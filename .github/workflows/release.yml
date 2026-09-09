@@ -53,6 +53,7 @@ jobs:
           $checksum = "${{ steps.checksum.outputs.checksum }}"
           $ref = "${{ github.ref_name }}"
           $repo = "${{ github.repository }}"
+          $guid = "20410cf8-e5cd-4307-a355-87c6b66c9ae6"
           $entry = [ordered]@{
             version = $version
             changelog = "Release $ref"
@@ -61,18 +62,42 @@ jobs:
             checksum = $checksum
             timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
           }
-          $manifest = @(
-            [ordered]@{
-              guid = "20410cf8-e5cd-4307-a355-87c6b66c9ae6"
-              name = "Smart TMDB Recommendations"
-              description = "Configurable TMDB-based movie recommendations for Jellyfin."
-              overview = "Configurable TMDB-based movie recommendations for Jellyfin."
-              owner = "zetard"
-              category = "Metadata"
-              versions = @($entry)
+
+          # Read existing catalog (must be a JSON array of PackageInfo objects).
+          $plugins = [System.Collections.Generic.List[PSObject]]::new()
+          if (Test-Path manifest.json) {
+            $existing = Get-Content manifest.json -Raw | ConvertFrom-Json
+            if ($null -ne $existing -and $existing.Count -gt 0) {
+              foreach ($p in $existing) {
+                if ($p.guid -ne $guid) { $plugins.Add($p) | Out-Null }
+              }
             }
-          )
-          $manifest | ConvertTo-Json -Depth 10 | Set-Content manifest.json
+          }
+
+          $plugin = [ordered]@{
+            guid = $guid
+            name = "Smart TMDB Recommendations"
+            description = "Configurable TMDB-based movie recommendations for Jellyfin."
+            overview = "Configurable TMDB-based movie recommendations for Jellyfin."
+            owner = "zetard"
+            category = "Metadata"
+            versions = @($entry)
+          }
+          $plugins.Add($plugin) | Out-Null
+
+          # Emit a top-level JSON array explicitly. ConvertTo-Json on a
+          # single-element collection drops the outer brackets, which makes
+          # the file a single object and breaks PackageInfo[] deserialization.
+          $lines = New-Object System.Collections.Generic.List[string]
+          $lines.Add("[") | Out-Null
+          for ($i = 0; $i -lt $plugins.Count; $i++) {
+            $json = $plugins[$i] | ConvertTo-Json -Depth 10
+            $indent = $json.Replace("`n", "`n  ")
+            $lines.Add("  $indent") | Out-Null
+            if ($i -lt ($plugins.Count - 1)) { $lines.Add(",") | Out-Null }
+          }
+          $lines.Add("]") | Out-Null
+          $lines -join "`n" | Set-Content manifest.json
 
       - name: Commit updated manifest
         run: |
