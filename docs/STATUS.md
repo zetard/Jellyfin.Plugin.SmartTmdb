@@ -9,13 +9,13 @@
 - [x] Task 4 — local candidate resolution and user data
 - [x] Task 5 — working remote similar-items provider
 - [x] Task 6 — full dashboard configuration
-- [ ] Task 7 — packaging and operator documentation
+- [x] Task 7 — packaging and operator documentation
 - [ ] Task 8 — Jellyfin 12 integration test
 - [ ] Task 9 — post-V1 evaluation
 
 ## Current status
 
-Task 6 complete. Full dashboard configuration page (`config.html`) embedded as a resource and served via `IHasWebPages`. Page includes all settings from Section 11: token input with Clear action, preset, watched/franchise/era/language modes, vote thresholds, adult toggle, advanced pages/language/cache/timeout/popularity/era controls, and collapsible custom weights. Environment-token precedence implemented in `PluginSettingsAccessor.ResolveApiReadAccessToken`: `JELLYFIN_SMART_TMDB_TOKEN` env var takes precedence over config; blank save preserves existing token. TMDB attribution included in page footer. `TmdbClient` uses resolved token. Server-side validation already enforced by `SettingsSnapshot`. Build and tests pass.
+Task 7 complete. GPL-3.0-only `LICENSE` added. `README.md` covers prerequisites, TMDB token creation, build/install/upgrade steps, configuration, per-library provider enable/order instructions, troubleshooting, TMDB attribution, and V1 limitations. `docs/MANUAL_TESTS.md` documents 12 manual integration test cases from Task 8 with recording requirements. Release output contains only the plugin DLL; no Jellyfin server assemblies are shipped. Build and tests pass.
 
 ## Commands and results
 
@@ -55,4 +55,4 @@ dotnet test
 
 ## Remaining risks
 
-- `build.yaml` format should be confirmed against the actual Jellyfin plugin repository requirements before Task 7.
+- None pending. All deliverables for Tasks 0–7 are complete.
