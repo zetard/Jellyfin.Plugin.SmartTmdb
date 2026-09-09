@@ -2,9 +2,295 @@
 <html>
 <head>
     <title>Smart TMDB Recommendations</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; }
+        .advanced { margin-left: 20px; }
+        .row { margin-bottom: 10px; }
+        label { display: inline-block; width: 250px; }
+        .description { color: #666; font-size: 0.9em; margin-left: 250px; }
+        .attribution { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 0.85em; color: #666; }
+        .env-note { background: #f0f8ff; border: 1px solid #cce; padding: 10px; margin-bottom: 15px; }
+    </style>
 </head>
 <body>
     <h1>Smart TMDB Recommendations</h1>
-    <p>Configuration page placeholder.</p>
+
+    <div class="env-note" id="envNote" style="display: none;">
+        <strong>Token configured by environment variable.</strong><br>
+        The TMDB API token is supplied by the <code>JELLYFIN_SMART_TMDB_TOKEN</code> environment variable. The configuration field below is disabled.
+    </div>
+
+    <div class="section">
+        <h2>General</h2>
+        <div class="row">
+            <label for="apiToken">TMDB API Read Access Token</label>
+            <input type="password" id="apiToken" autocomplete="off">
+            <button type="button" id="clearToken">Clear</button>
+            <div class="description">Get your token from <a href="https://www.themoviedb.org/settings/api" target="_blank">TMDB API Settings</a>. Required unless the <code>JELLYFIN_SMART_TMDB_TOKEN</code> environment variable is set.</div>
+        </div>
+        <div class="row">
+            <label for="preset">Recommendation style</label>
+            <select id="preset">
+                <option value="0">Balanced</option>
+                <option value="1">Mainstream</option>
+                <option value="2">Explorer</option>
+                <option value="3">Custom</option>
+            </select>
+            <div class="description">Balanced is a good starting point. Mainstream favors popular titles. Explorer favors lesser-known titles. Custom lets you tune weights manually.</div>
+        </div>
+        <div class="row">
+            <label for="watchedMode">Watched movies</label>
+            <select id="watchedMode">
+                <option value="0">Allow</option>
+                <option value="1">Prefer unwatched</option>
+                <option value="2">Only unwatched</option>
+            </select>
+            <div class="description">Prefer unwatched boosts unseen movies. Only unwatched hides watched movies from results. If no user is logged in, Allow is used.</div>
+        </div>
+        <div class="row">
+            <label for="franchiseMode">Franchise behavior</label>
+            <select id="franchiseMode">
+                <option value="0">Neutral</option>
+                <option value="1">Prefer next part</option>
+                <option value="2">Avoid same collection</option>
+            </select>
+            <div class="description">Prefer next part boosts likely sequels in the same collection. Avoid same collection reduces movies from the same franchise.</div>
+        </div>
+        <div class="row">
+            <label for="eraMode">Release era</label>
+            <select id="eraMode">
+                <option value="0">Off</option>
+                <option value="1">Soft preference</option>
+                <option value="2">Strict ±10 years</option>
+            </select>
+            <div class="description">Soft preference uses exponential decay based on release year distance. Strict ±10 years filters out movies more than 10 years older or newer than the source.</div>
+        </div>
+        <div class="row">
+            <label for="languageMode">Original language</label>
+            <select id="languageMode">
+                <option value="0">Any</option>
+                <option value="1">Prefer source language</option>
+                <option value="2">Only source language</option>
+            </select>
+            <div class="description">Prefer source language gives a small bonus to movies matching the source movie's original language. Only source language filters out everything else.</div>
+        </div>
+        <div class="row">
+            <label for="minimumVoteAverage">Minimum TMDB rating</label>
+            <input type="number" id="minimumVoteAverage" step="0.1" min="0" max="10">
+            <div class="description">Candidates with a TMDB vote average below this value are filtered out. Default: 5.5.</div>
+        </div>
+        <div class="row">
+            <label for="minimumVoteCount">Minimum TMDB votes</label>
+            <input type="number" id="minimumVoteCount" step="1" min="0">
+            <div class="description">Candidates with fewer TMDB votes than this are filtered out. Default: 100.</div>
+        </div>
+        <div class="row">
+            <label for="includeAdult">Include adult candidates</label>
+            <input type="checkbox" id="includeAdult">
+            <div class="description">When enabled, adult-rated movies may appear in results. Jellyfin's parental controls still apply.</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Advanced</h2>
+        <div class="advanced">
+            <div class="row">
+                <label for="recommendationPages">Recommendation pages</label>
+                <input type="number" id="recommendationPages" step="1" min="1" max="5">
+                <div class="description">Number of TMDB recommendation pages to fetch. Each page returns up to 20 candidates. Default: 3.</div>
+            </div>
+            <div class="row">
+                <label for="similarPages">Similar pages</label>
+                <input type="number" id="similarPages" step="1" min="1" max="5">
+                <div class="description">Number of TMDB similar pages to fetch. Default: 1.</div>
+            </div>
+            <div class="row">
+                <label for="responseLanguage">TMDB response language</label>
+                <input type="text" id="responseLanguage" placeholder="auto">
+                <div class="description">Language code for TMDB responses. Use "auto" to let TMDB choose based on request headers. Examples: en-US, de-DE. Default: auto.</div>
+            </div>
+            <div class="row">
+                <label for="rawCacheHours">Raw cache duration</label>
+                <input type="number" id="rawCacheHours" step="1" min="1" max="168">
+                <div class="description">How long raw TMDB responses are cached in memory, in hours. Default: 24. Maximum: 168 (7 days).</div>
+            </div>
+            <div class="row">
+                <label for="requestTimeoutSeconds">Request timeout</label>
+                <input type="number" id="requestTimeoutSeconds" step="1" min="1" max="60">
+                <div class="description">HTTP request timeout to TMDB in seconds. Default: 10. Maximum: 60.</div>
+            </div>
+            <div class="row">
+                <label for="popularityBias">Popularity bias</label>
+                <input type="number" id="popularityBias" step="1" min="-2" max="2">
+                <div class="description">-2 favors obscure titles, 0 is neutral, +2 favors popular titles. Default: 0.</div>
+            </div>
+            <div class="row">
+                <label for="eraHalfLifeYears">Era half-life</label>
+                <input type="number" id="eraHalfLifeYears" step="1" min="1" max="100">
+                <div class="description">Half-life in years for the era scoring feature. A movie released this many years from the source scores 0.5 on the era feature. Default: 15.</div>
+            </div>
+            <div id="customWeightsSection" style="display: none;">
+                <h3>Custom scoring weights</h3>
+                <p>These weights are used only when Recommendation style is set to Custom.</p>
+                <div class="row">
+                    <label for="recWeight">Recommendation rank</label>
+                    <input type="number" id="recWeight" step="0.01" min="0">
+                    <div class="description">Weight for TMDB recommendation rank ordering.</div>
+                </div>
+                <div class="row">
+                    <label for="simWeight">Similar rank</label>
+                    <input type="number" id="simWeight" step="0.01" min="0">
+                    <div class="description">Weight for TMDB similar movies rank ordering.</div>
+                </div>
+                <div class="row">
+                    <label for="genreWeight">Genre overlap</label>
+                    <input type="number" id="genreWeight" step="0.01" min="0">
+                    <div class="description">Weight for Jaccard genre overlap between source and candidate.</div>
+                </div>
+                <div class="row">
+                    <label for="eraWeight">Era closeness</label>
+                    <input type="number" id="eraWeight" step="0.01" min="0">
+                    <div class="description">Weight for exponential era closeness based on release year.</div>
+                </div>
+                <div class="row">
+                    <label for="qualityWeight">Quality</label>
+                    <input type="number" id="qualityWeight" step="0.01" min="0">
+                    <div class="description">Weight for Bayesian vote average quality score.</div>
+                </div>
+                <div class="row">
+                    <label for="popularityWeight">Popularity</label>
+                    <input type="number" id="popularityWeight" step="0.01" min="0">
+                    <div class="description">Weight for log-scaled popularity percentile within the candidate pool.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <button type="button" id="saveButton">Save</button>
+        <span id="status" style="margin-left: 10px;"></span>
+    </div>
+
+    <div class="attribution">
+        <p><strong>TMDB Attribution:</strong> This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+        <p><a href="https://www.themoviedb.org/" target="_blank">Visit TMDB</a></p>
+    </div>
+
+    <script>
+        (function() {
+            const envNote = document.getElementById('envNote');
+            const apiTokenInput = document.getElementById('apiToken');
+            const clearTokenButton = document.getElementById('clearToken');
+            const presetSelect = document.getElementById('preset');
+            const customWeightsSection = document.getElementById('customWeightsSection');
+            const saveButton = document.getElementById('saveButton');
+            const statusSpan = document.getElementById('status');
+
+            function updateCustomWeightsVisibility() {
+                if (presetSelect.value === '3') {
+                    customWeightsSection.style.display = 'block';
+                } else {
+                    customWeightsSection.style.display = 'none';
+                }
+            }
+
+            function showStatus(message, isError) {
+                statusSpan.textContent = message;
+                statusSpan.style.color = isError ? 'red' : 'green';
+                setTimeout(() => { statusSpan.textContent = ''; }, 5000);
+            }
+
+            async function loadConfig() {
+                try {
+                    const response = await ApiClient.getPluginConfiguration('20410cf8-e5cd-4307-a355-87c6b66c9ae6');
+                    const config = response || {};
+
+                    if (config.ApiReadAccessToken) {
+                        apiTokenInput.value = '••••••••••••';
+                    } else {
+                        apiTokenInput.value = '';
+                    }
+
+                    document.getElementById('watchedMode').value = config.WatchedMode || 0;
+                    document.getElementById('franchiseMode').value = config.FranchiseMode || 0;
+                    document.getElementById('eraMode').value = config.EraMode || 0;
+                    document.getElementById('languageMode').value = config.LanguageMode || 0;
+                    document.getElementById('minimumVoteAverage').value = config.MinimumVoteAverage ?? 5.5;
+                    document.getElementById('minimumVoteCount').value = config.MinimumVoteCount ?? 100;
+                    document.getElementById('includeAdult').checked = config.IncludeAdult || false;
+                    document.getElementById('recommendationPages').value = config.RecommendationPages ?? 3;
+                    document.getElementById('similarPages').value = config.SimilarPages ?? 1;
+                    document.getElementById('responseLanguage').value = config.ResponseLanguage || 'auto';
+                    document.getElementById('rawCacheHours').value = config.RawCacheHours ?? 24;
+                    document.getElementById('requestTimeoutSeconds').value = config.RequestTimeoutSeconds ?? 10;
+                    document.getElementById('popularityBias').value = config.PopularityBias ?? 0;
+                    document.getElementById('eraHalfLifeYears').value = config.EraHalfLifeYears ?? 15;
+
+                    if (config.CustomWeights) {
+                        document.getElementById('recWeight').value = config.CustomWeights.RecommendationRank ?? 0;
+                        document.getElementById('simWeight').value = config.CustomWeights.SimilarRank ?? 0;
+                        document.getElementById('genreWeight').value = config.CustomWeights.Genre ?? 0;
+                        document.getElementById('eraWeight').value = config.CustomWeights.Era ?? 0;
+                        document.getElementById('qualityWeight').value = config.CustomWeights.Quality ?? 0;
+                        document.getElementById('popularityWeight').value = config.CustomWeights.Popularity ?? 0;
+                    }
+
+                    presetSelect.value = config.Preset ?? 0;
+                    updateCustomWeightsVisibility();
+                } catch (e) {
+                    showStatus('Failed to load configuration: ' + e.message, true);
+                }
+            }
+
+            async function saveConfig() {
+                try {
+                    const preset = parseInt(presetSelect.value);
+                    const config = {
+                        ApiReadAccessToken: apiTokenInput.value && apiTokenInput.value !== '••••••••••••' ? apiTokenInput.value : '',
+                        Preset: preset,
+                        WatchedMode: parseInt(document.getElementById('watchedMode').value),
+                        FranchiseMode: parseInt(document.getElementById('franchiseMode').value),
+                        EraMode: parseInt(document.getElementById('eraMode').value),
+                        LanguageMode: parseInt(document.getElementById('languageMode').value),
+                        MinimumVoteAverage: parseFloat(document.getElementById('minimumVoteAverage').value) || 0,
+                        MinimumVoteCount: parseInt(document.getElementById('minimumVoteCount').value) || 0,
+                        IncludeAdult: document.getElementById('includeAdult').checked,
+                        UseRecommendations: true,
+                        UseSimilar: true,
+                        RecommendationPages: Math.min(5, Math.max(1, parseInt(document.getElementById('recommendationPages').value) || 3)),
+                        SimilarPages: Math.min(5, Math.max(1, parseInt(document.getElementById('similarPages').value) || 1)),
+                        ResponseLanguage: document.getElementById('responseLanguage').value || 'auto',
+                        RawCacheHours: Math.min(168, Math.max(1, parseInt(document.getElementById('rawCacheHours').value) || 24)),
+                        RequestTimeoutSeconds: Math.min(60, Math.max(1, parseInt(document.getElementById('requestTimeoutSeconds').value) || 10)),
+                        PopularityBias: Math.min(2, Math.max(-2, parseInt(document.getElementById('popularityBias').value) || 0)),
+                        EraHalfLifeYears: Math.min(100, Math.max(1, parseInt(document.getElementById('eraHalfLifeYears').value) || 15)),
+                        CustomWeights: preset === 3 ? {
+                            RecommendationRank: parseFloat(document.getElementById('recWeight').value) || 0,
+                            SimilarRank: parseFloat(document.getElementById('simWeight').value) || 0,
+                            Genre: parseFloat(document.getElementById('genreWeight').value) || 0,
+                            Era: parseFloat(document.getElementById('eraWeight').value) || 0,
+                            Quality: parseFloat(document.getElementById('qualityWeight').value) || 0,
+                            Popularity: parseFloat(document.getElementById('popularityWeight').value) || 0
+                        } : { RecommendationRank: 0.55, SimilarRank: 0.15, Genre: 0.10, Era: 0.05, Quality: 0.10, Popularity: 0.05 }
+                    };
+
+                    await ApiClient.updatePluginConfiguration('20410cf8-e5cd-4307-a355-87c6b66c9ae6', config);
+                    showStatus('Configuration saved successfully.', false);
+                } catch (e) {
+                    showStatus('Failed to save configuration: ' + e.message, true);
+                }
+            }
+
+            presetSelect.addEventListener('change', updateCustomWeightsVisibility);
+            saveButton.addEventListener('click', saveConfig);
+            clearTokenButton.addEventListener('click', function() {
+                apiTokenInput.value = '';
+                apiTokenInput.focus();
+            });
+
+            loadConfig();
+        })();
+    </script>
 </body>
 </html>

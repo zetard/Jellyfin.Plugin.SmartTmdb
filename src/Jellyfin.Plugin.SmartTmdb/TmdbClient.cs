@@ -52,7 +52,7 @@ public sealed class TmdbClient : ITmdbClient
     public async Task<TmdbMovieDetailsDto> GetMovieDetailsAsync(int tmdbId, string? language, CancellationToken cancellationToken)
     {
         PluginConfiguration config = _settingsAccessor.GetConfiguration();
-        string? token = config.ApiReadAccessToken;
+        string? token = PluginSettingsAccessor.ResolveApiReadAccessToken(config);
 
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -73,7 +73,7 @@ public sealed class TmdbClient : ITmdbClient
     public async Task<TmdbRecommendationPageDto> GetRecommendationsAsync(int tmdbId, string? language, int page, CancellationToken cancellationToken)
     {
         PluginConfiguration config = _settingsAccessor.GetConfiguration();
-        string? token = config.ApiReadAccessToken;
+        string? token = PluginSettingsAccessor.ResolveApiReadAccessToken(config);
 
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -94,7 +94,7 @@ public sealed class TmdbClient : ITmdbClient
     public async Task<TmdbSimilarPageDto> GetSimilarAsync(int tmdbId, string? language, int page, CancellationToken cancellationToken)
     {
         PluginConfiguration config = _settingsAccessor.GetConfiguration();
-        string? token = config.ApiReadAccessToken;
+        string? token = PluginSettingsAccessor.ResolveApiReadAccessToken(config);
 
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -115,7 +115,7 @@ public sealed class TmdbClient : ITmdbClient
     public async Task<TmdbCollectionDto> GetCollectionAsync(int collectionId, string? language, CancellationToken cancellationToken)
     {
         PluginConfiguration config = _settingsAccessor.GetConfiguration();
-        string? token = config.ApiReadAccessToken;
+        string? token = PluginSettingsAccessor.ResolveApiReadAccessToken(config);
 
         if (string.IsNullOrWhiteSpace(token))
         {

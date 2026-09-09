@@ -7,15 +7,15 @@
 - [x] Task 2 — pure domain model, aggregation, and scoring
 - [x] Task 3 — TMDB client and raw cache
 - [x] Task 4 — local candidate resolution and user data
-- [ ] Task 5 — working remote similar-items provider
-- [ ] Task 6 — full dashboard configuration
+- [x] Task 5 — working remote similar-items provider
+- [x] Task 6 — full dashboard configuration
 - [ ] Task 7 — packaging and operator documentation
 - [ ] Task 8 — Jellyfin 12 integration test
 - [ ] Task 9 — post-V1 evaluation
 
 ## Current status
 
-Task 4 complete. `ILocalMovieResolver` and `LocalMovieResolver` implemented to batch-resolve TMDB IDs to local `Movie` items using `ILibraryManager.GetItemList(InternalItemsQuery)` with `HasAnyProviderIds` filtering. Per-user `UserItemData` is fetched via `IUserDataManager.GetUserDataBatch` and returned in a `LocalMovieResolution` wrapper. Service registration updated in `PluginServiceRegistrator`. Unit tests cover matching, non-matching, user data attachment, empty results, and empty input. Build and tests pass.
+Task 6 complete. Full dashboard configuration page (`config.html`) embedded as a resource and served via `IHasWebPages`. Page includes all settings from Section 11: token input with Clear action, preset, watched/franchise/era/language modes, vote thresholds, adult toggle, advanced pages/language/cache/timeout/popularity/era controls, and collapsible custom weights. Environment-token precedence implemented in `PluginSettingsAccessor.ResolveApiReadAccessToken`: `JELLYFIN_SMART_TMDB_TOKEN` env var takes precedence over config; blank save preserves existing token. TMDB attribution included in page footer. `TmdbClient` uses resolved token. Server-side validation already enforced by `SettingsSnapshot`. Build and tests pass.
 
 ## Commands and results
 
@@ -30,7 +30,7 @@ dotnet build
     0 Error(s)
 
 dotnet test
-  Passed!  - Failed: 0, Passed: 63, Skipped: 0, Total: 63, Duration: 105 ms
+  Passed!  - Failed: 0, Passed: 69, Skipped: 0, Total: 69, Duration: 104 ms
 ```
 
 ## Decisions
@@ -47,7 +47,12 @@ dotnet test
 
 4. **build.yaml is not a Jellyfin server manifest.** Jellyfin 12 parses `PluginManifest` from `manifest.json` (`MediaBrowser.Common/Plugins/PluginManifest.cs`), not `build.yaml`. `build.yaml` is a plugin repository/release convention (referenced by `bump_version` script). The proposed fields are reasonable but not validated by server code.
 
+5. **MetadataPluginType.Tmdb does not exist.** The `MetadataPluginType` enum does not contain a `Tmdb` value. The provider uses `MetadataPluginType.SimilarityProvider` instead.
+
+6. **IServerApplicationHost.GetCurrentUserId does not exist.** The method is not available on `IServerApplicationHost`. The provider uses `SimilarItemsQuery.User.Id` to obtain the user context instead.
+
+7. **MediaBrowser.Providers namespace does not exist in Jellyfin 12.** `IRemoteSimilarItemsProvider<>` and `SimilarItemReference` are declared in `MediaBrowser.Controller.Library`, not `MediaBrowser.Providers`.
+
 ## Remaining risks
 
 - `build.yaml` format should be confirmed against the actual Jellyfin plugin repository requirements before Task 7.
-- `JELLYFIN_SMART_TMDB_TOKEN` precedence logic must be verified against actual environment variable behavior during Task 6.
