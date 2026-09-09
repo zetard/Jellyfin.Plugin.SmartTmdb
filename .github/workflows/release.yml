@@ -10,6 +10,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -47,7 +50,7 @@ jobs:
           git config user.email "github-actions@github.com"
           git add manifest.json
           git commit -m "Update manifest.json for v${{ github.ref_name }}"
-          git push
+          git push origin master
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
