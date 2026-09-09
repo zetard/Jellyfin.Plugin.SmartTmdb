@@ -24,6 +24,13 @@ public sealed class PluginSettingsAccessor : IPluginSettingsAccessor
     /// <inheritdoc/>
     public PluginConfiguration GetConfiguration()
     {
+        Plugin? plugin = Plugin.Instance;
+        if (plugin is not null)
+        {
+            return plugin.Configuration;
+        }
+
+        _logger.LogWarning("Plugin instance is unavailable; returning default configuration.");
         return new PluginConfiguration();
     }
 

@@ -21,6 +21,11 @@ namespace Jellyfin.Plugin.SmartTmdb;
 public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
     /// <summary>
+    /// Gets the singleton plugin instance, set by the constructor.
+    /// </summary>
+    public static Plugin? Instance { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="Plugin"/> class.
     /// </summary>
     /// <param name="applicationPaths">Application paths.</param>
@@ -28,6 +33,7 @@ public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
         : base(applicationPaths, xmlSerializer)
     {
+        Instance = this;
     }
 
     /// <inheritdoc/>

@@ -118,7 +118,7 @@ public class CandidateScorerTests
     }
 
     [Fact]
-    public void PopularityDirection_MainstreamFavorsPopular()
+    public async Task PopularityDirection_MainstreamFavorsPopular()
     {
         var candidates = new List<RecommendationCandidate>
         {
@@ -129,13 +129,13 @@ public class CandidateScorerTests
         SettingsSnapshot settings = CreateSettings(ScoringWeights.Mainstream, RecommendationPreset.Mainstream);
         settings = new SettingsSnapshot(new PluginConfiguration { Preset = RecommendationPreset.Mainstream, PopularityBias = 1 });
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(candidates, new HashSet<int>(), null, null, settings, CancellationToken.None).Result;
+        var results = await scorer.ScoreAllAsync(candidates, new HashSet<int>(), null, null, settings, CancellationToken.None);
 
         Assert.True(results[1].Score > results[0].Score);
     }
 
     [Fact]
-    public void PopularityDirection_ExplorerFavorsUnpopular()
+    public async Task PopularityDirection_ExplorerFavorsUnpopular()
     {
         var candidates = new List<RecommendationCandidate>
         {
@@ -146,13 +146,13 @@ public class CandidateScorerTests
         SettingsSnapshot settings = CreateSettings(ScoringWeights.Explorer, RecommendationPreset.Explorer);
         settings = new SettingsSnapshot(new PluginConfiguration { Preset = RecommendationPreset.Explorer, PopularityBias = -1 });
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(candidates, new HashSet<int>(), null, null, settings, CancellationToken.None).Result;
+        var results = await scorer.ScoreAllAsync(candidates, new HashSet<int>(), null, null, settings, CancellationToken.None);
 
         Assert.True(results[0].Score > results[1].Score);
     }
 
     [Fact]
-    public void WatchedMode_PreferUnwatched_PenalizesPlayed()
+    public async Task WatchedMode_PreferUnwatched_PenalizesPlayed()
     {
         var played = CreateCandidate(userData: new UserItemData { Key = "0", Played = true }, tmdbId: 1);
         var unplayed = CreateCandidate(userData: new UserItemData { Key = "0", Played = false }, tmdbId: 2);
@@ -160,13 +160,13 @@ public class CandidateScorerTests
         SettingsSnapshot settings = CreateSettings();
         settings = new SettingsSnapshot(new PluginConfiguration { WatchedMode = WatchedMode.PreferUnwatched });
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(new List<RecommendationCandidate> { played, unplayed }, new HashSet<int>(), null, null, settings, CancellationToken.None).Result;
+        var results = await scorer.ScoreAllAsync(new List<RecommendationCandidate> { played, unplayed }, new HashSet<int>(), null, null, settings, CancellationToken.None);
 
         Assert.True(results[1].Score > results[0].Score);
     }
 
     [Fact]
-    public void WatchedMode_UnwatchedOnly_FiltersPlayed()
+    public async Task WatchedMode_UnwatchedOnly_FiltersPlayed()
     {
         var played = CreateCandidate(userData: new UserItemData { Key = "0", Played = true }, tmdbId: 1);
         var unplayed = CreateCandidate(userData: new UserItemData { Key = "0", Played = false }, tmdbId: 2);
@@ -174,14 +174,14 @@ public class CandidateScorerTests
         SettingsSnapshot settings = CreateSettings();
         settings = new SettingsSnapshot(new PluginConfiguration { WatchedMode = WatchedMode.UnwatchedOnly });
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(new List<RecommendationCandidate> { played, unplayed }, new HashSet<int>(), null, null, settings, CancellationToken.None).Result;
+        var results = await scorer.ScoreAllAsync(new List<RecommendationCandidate> { played, unplayed }, new HashSet<int>(), null, null, settings, CancellationToken.None);
 
         Assert.True(results[0].IsFiltered);
         Assert.False(results[1].IsFiltered);
     }
 
     [Fact]
-    public void FranchiseMode_PreferNext_Bonuses()
+    public async Task FranchiseMode_PreferNext_Bonuses()
     {
         var likelyNext = CreateCandidate(isInSourceCollection: true, isLikelyNextCollectionPart: true, tmdbId: 1);
         var sameCollection = CreateCandidate(isInSourceCollection: true, isLikelyNextCollectionPart: false, tmdbId: 2);
@@ -190,14 +190,14 @@ public class CandidateScorerTests
         SettingsSnapshot settings = CreateSettings();
         settings = new SettingsSnapshot(new PluginConfiguration { FranchiseMode = FranchiseMode.PreferNext });
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(new List<RecommendationCandidate> { likelyNext, sameCollection, outside }, new HashSet<int>(), null, null, settings, CancellationToken.None).Result;
+        var results = await scorer.ScoreAllAsync(new List<RecommendationCandidate> { likelyNext, sameCollection, outside }, new HashSet<int>(), null, null, settings, CancellationToken.None);
 
         Assert.True(results[0].Score > results[1].Score);
         Assert.True(results[1].Score > results[2].Score);
     }
 
     [Fact]
-    public void FranchiseMode_Avoid_PenalizesSameCollection()
+    public async Task FranchiseMode_Avoid_PenalizesSameCollection()
     {
         var sameCollection = CreateCandidate(isInSourceCollection: true, tmdbId: 1);
         var outside = CreateCandidate(isInSourceCollection: false, tmdbId: 2);
@@ -205,13 +205,13 @@ public class CandidateScorerTests
         SettingsSnapshot settings = CreateSettings();
         settings = new SettingsSnapshot(new PluginConfiguration { FranchiseMode = FranchiseMode.Avoid });
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(new List<RecommendationCandidate> { sameCollection, outside }, new HashSet<int>(), null, null, settings, CancellationToken.None).Result;
+        var results = await scorer.ScoreAllAsync(new List<RecommendationCandidate> { sameCollection, outside }, new HashSet<int>(), null, null, settings, CancellationToken.None);
 
         Assert.True(results[1].Score > results[0].Score);
     }
 
     [Fact]
-    public void Score_ClampedTo095()
+    public async Task Score_ClampedTo095()
     {
         var candidate = CreateCandidate(recommendationRank: 1, similarRank: 1);
         var sourceGenres = new HashSet<int> { 1, 2, 3 };
@@ -219,13 +219,13 @@ public class CandidateScorerTests
 
         SettingsSnapshot settings = CreateSettings(weights: new ScoringWeights(1.0, 1.0, 1.0, 1.0, 1.0, 1.0));
         var scorer = new CandidateScorer();
-        var results = scorer.ScoreAllAsync(
+        var results = await scorer.ScoreAllAsync(
             new List<RecommendationCandidate> { candidate with { GenreIds = candidateGenres } },
             sourceGenres,
             candidate.ReleaseDate,
             candidate.OriginalLanguage,
             settings,
-            CancellationToken.None).Result;
+            CancellationToken.None);
 
         Assert.True(results[0].Score <= 0.95f);
     }

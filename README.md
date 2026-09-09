@@ -68,7 +68,7 @@ dotnet build --configuration Release
 ## Troubleshooting
 
 - **No results**: Verify the TMDB token is valid and the source movie has a TMDB ID.
-- **Token not persisting**: Ensure you are not using the `JELLYFIN_SMART_TM_TOKEN` environment variable, which disables the config field.
+- **Token not persisting**: Ensure you are not using the `JELLYFIN_SMART_TMDB_TOKEN` environment variable, which disables the config field.
 - **Results not changing**: Check that the provider is enabled and ordered above the default TMDB provider in library settings.
 - **Adult content appearing**: Disable **Include adult candidates** in plugin settings.
 

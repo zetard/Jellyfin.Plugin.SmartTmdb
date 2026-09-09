@@ -35,9 +35,10 @@ public sealed class LocalMovieResolver : ILocalMovieResolver
     }
 
     /// <inheritdoc/>
-    public Task<IReadOnlyDictionary<int, LocalMovieResolution>> ResolveAsync(IReadOnlyList<int> tmdbIds, Guid? userId, CancellationToken cancellationToken)
+    public Task<IReadOnlyDictionary<int, LocalMovieResolution>> ResolveAsync(IReadOnlyList<int> tmdbIds, Guid? userId, IReadOnlyList<Guid> excludeItemIds, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tmdbIds);
+        ArgumentNullException.ThrowIfNull(excludeItemIds);
 
         if (tmdbIds.Count == 0)
         {
@@ -47,6 +48,7 @@ public sealed class LocalMovieResolver : ILocalMovieResolver
         var query = new InternalItemsQuery
         {
             IncludeItemTypes = new[] { BaseItemKind.Movie },
+            ExcludeItemIds = excludeItemIds.Distinct().ToArray(),
             HasAnyProviderIds = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase),
         };
 

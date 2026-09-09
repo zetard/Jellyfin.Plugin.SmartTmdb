@@ -42,7 +42,7 @@ public class LocalMovieResolverTests
         var userDataManager = new Mock<IUserDataManager>();
 
         var resolver = new LocalMovieResolver(libraryManager.Object, userManager.Object, userDataManager.Object);
-        var result = await resolver.ResolveAsync(new List<int> { 101, 102 }, null, CancellationToken.None);
+        var result = await resolver.ResolveAsync(new List<int> { 101, 102 }, null, new Guid[0], CancellationToken.None);
 
         Assert.Equal(2, result.Count);
         Assert.True(result.ContainsKey(101));
@@ -60,7 +60,7 @@ public class LocalMovieResolverTests
         var userDataManager = new Mock<IUserDataManager>();
 
         var resolver = new LocalMovieResolver(libraryManager.Object, userManager.Object, userDataManager.Object);
-        var result = await resolver.ResolveAsync(new List<int> { 999 }, null, CancellationToken.None);
+        var result = await resolver.ResolveAsync(new List<int> { 999 }, null, new Guid[0], CancellationToken.None);
 
         Assert.Empty(result);
     }
@@ -85,7 +85,7 @@ public class LocalMovieResolverTests
             .Returns(new Dictionary<Guid, UserItemData> { [movie1.Id] = userData });
 
         var resolver = new LocalMovieResolver(libraryManager.Object, userManager.Object, userDataManager.Object);
-        var result = await resolver.ResolveAsync(new List<int> { 101 }, userId, CancellationToken.None);
+        var result = await resolver.ResolveAsync(new List<int> { 101 }, userId, new Guid[0], CancellationToken.None);
 
         Assert.Single(result);
         Assert.True(result[101].UserData?.Played);
@@ -102,7 +102,7 @@ public class LocalMovieResolverTests
         var userDataManager = new Mock<IUserDataManager>();
 
         var resolver = new LocalMovieResolver(libraryManager.Object, userManager.Object, userDataManager.Object);
-        var result = await resolver.ResolveAsync(new List<int> { 101 }, null, CancellationToken.None);
+        var result = await resolver.ResolveAsync(new List<int> { 101 }, null, new Guid[0], CancellationToken.None);
 
         Assert.Empty(result);
     }
@@ -115,8 +115,34 @@ public class LocalMovieResolverTests
         var userDataManager = new Mock<IUserDataManager>();
 
         var resolver = new LocalMovieResolver(libraryManager.Object, userManager.Object, userDataManager.Object);
-        var result = await resolver.ResolveAsync(new List<int>(), null, CancellationToken.None);
+        var result = await resolver.ResolveAsync(new List<int>(), null, new Guid[0], CancellationToken.None);
 
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_PassesExcludeItemIds_ToLibraryQuery()
+    {
+        var excludedId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var movie1 = CreateMovie(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), 101);
+
+        InternalItemsQuery? capturedQuery = null;
+        var libraryManager = new Mock<ILibraryManager>();
+        libraryManager.Setup(m => m.GetItemList(It.IsAny<InternalItemsQuery>()))
+            .Returns((InternalItemsQuery q) => { capturedQuery = q; return new List<BaseItem> { movie1 }; });
+
+        var userManager = new Mock<IUserManager>();
+        var userDataManager = new Mock<IUserDataManager>();
+
+        var resolver = new LocalMovieResolver(libraryManager.Object, userManager.Object, userDataManager.Object);
+        var result = await resolver.ResolveAsync(
+            new List<int> { 101 },
+            null,
+            new Guid[] { excludedId },
+            CancellationToken.None);
+
+        Assert.Single(result);
+        Assert.NotNull(capturedQuery);
+        Assert.Contains(excludedId, capturedQuery!.ExcludeItemIds);
     }
 }

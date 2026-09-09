@@ -18,8 +18,10 @@ public class TmdbClientTests
 {
     private const string FakeToken = "fake-token";
 
-    private static ITmdbClient CreateClient(HttpResponseMessage? response, out Mock<IPluginSettingsAccessor> settingsMock, out Mock<IRawTmdbCache> cacheMock)
+    private static ITmdbClient CreateClient(HttpResponseMessage response, out Mock<IPluginSettingsAccessor> settingsMock, out Mock<IRawTmdbCache> cacheMock)
     {
+        ArgumentNullException.ThrowIfNull(response);
+
         settingsMock = new Mock<IPluginSettingsAccessor>();
         settingsMock.Setup(s => s.GetConfiguration()).Returns(new PluginConfiguration { ApiReadAccessToken = FakeToken, ResponseLanguage = "en-US", RequestTimeoutSeconds = 10, RawCacheHours = 1 });
 

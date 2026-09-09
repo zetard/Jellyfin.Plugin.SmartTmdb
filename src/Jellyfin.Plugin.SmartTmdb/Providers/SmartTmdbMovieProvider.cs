@@ -21,7 +21,8 @@ namespace Jellyfin.Plugin.SmartTmdb;
 public sealed class SmartTmdbMovieProvider : IRemoteSimilarItemsProvider<Movie>
 {
     private const string ProviderName = "Smart TMDB Recommendations";
-    private const int MaxCandidates = 20;
+    private const int MaxCandidatePool = 200;
+    private const int DefaultResultLimit = 50;
     private const int MaxPages = 5;
 
     private readonly ITmdbClient _tmdbClient;
@@ -119,7 +120,10 @@ public sealed class SmartTmdbMovieProvider : IRemoteSimilarItemsProvider<Movie>
             var scored = candidates.Zip(scores, (c, s) => new { Candidate = c, Score = s })
                 .Where(x => !x.Score.IsFiltered)
                 .OrderByDescending(x => x.Score.Score)
-                .Take(MaxCandidates)
+                .ThenBy(x => x.Candidate.RecommendationRank ?? int.MaxValue)
+                .ThenBy(x => x.Candidate.SimilarRank ?? int.MaxValue)
+                .ThenBy(x => x.Candidate.TmdbId)
+                .Take(MaxCandidatePool)
                 .ToList();
 
             if (scored.Count == 0)
@@ -128,11 +132,18 @@ public sealed class SmartTmdbMovieProvider : IRemoteSimilarItemsProvider<Movie>
             }
 
             List<int> candidateTmdbIds = scored.Select(x => x.Candidate.TmdbId).ToList();
-            IReadOnlyDictionary<int, LocalMovieResolution> localResolutions = await _localMovieResolver.ResolveAsync(candidateTmdbIds, GetUserId(query), cancellationToken).ConfigureAwait(false);
+            IReadOnlyDictionary<int, LocalMovieResolution> localResolutions = await _localMovieResolver.ResolveAsync(candidateTmdbIds, GetUserId(query), query.ExcludeItemIds, cancellationToken).ConfigureAwait(false);
+
+            int resultLimit = query.Limit ?? DefaultResultLimit;
 
             results = new List<SimilarItemReference>();
             foreach (var entry in scored)
             {
+                if (results.Count >= resultLimit)
+                {
+                    break;
+                }
+
                 RecommendationCandidate candidate = entry.Candidate;
                 ScoreResult scoreResult = entry.Score;
 

@@ -5,8 +5,8 @@
 - [x] Task 0 — repository guardrails and API verification
 - [x] Task 1 — solution and compile-only plugin skeleton
 - [x] Task 2 — pure domain model, aggregation, and scoring
-- [ ] Task 3 — TMDB client and raw cache
-- [ ] Task 4 — local candidate resolution and user data
+- [x] Task 3 — TMDB client and raw cache
+- [x] Task 4 — local candidate resolution and user data
 - [x] Task 5 — working remote similar-items provider
 - [ ] Task 6 — full dashboard configuration
 - [ ] Task 7 — packaging and operator documentation
@@ -19,11 +19,27 @@
 
 **Task 2 (scoring core).** `SettingsSnapshot.cs`, `ScoreResult.cs`,
 `CandidateAggregator.cs`, `CandidateScorer.cs`, and the `ICandidateScorer`
-batch interface are implemented and unit tested. 24 tests pass.
+batch interface are implemented and unit tested.
+
+**Task 3 (TMDB client and raw cache).** `TmdbClient.cs` uses Bearer
+authentication, `IHttpClientFactory`, bounded retry/timeout, raw-cache
+coalescing, and redacted structured logging. `MemoryRawTmdbCache` provides
+bounded in-memory TTL storage. Fixture tests cover valid results, missing
+optional fields, empty pages, malformed JSON, 401, 404, 429 with
+`Retry-After`, 500, timeout, and cancellation; the token never appears in
+URIs, cache keys, or exception messages.
+
+**Task 4 (local resolution).** `LocalMovieResolver.cs` resolves TMDB IDs to
+local movies in a single `ILibraryManager.GetItemList` query, attaches batch
+`IUserDataManager` data when a user is present, and forwards
+`query.ExcludeItemIds` onto the library query. Null user disables watched
+personalization; only local movie items are returned to the provider layer.
 
 **Task 5 (remote provider).** `SmartTmdbMovieProvider.cs` implements
-`IRemoteSimilarItemsProvider<Movie>` for Jellyfin 12. Build is clean
-(0 warnings, 0 errors) and the test suite reports 63 passed, 0 failed.
+`IRemoteSimilarItemsProvider<Movie>` for Jellyfin 12. The candidate pool is
+built larger than `query.Limit` before local resolution, results are capped at
+`query.Limit ?? 50`, scores are clamped to `[0, 0.95]`, and `CacheDuration`
+remains null.
 
 **Release workflow.** `.github/workflows/release.yml` is fully green
 (run #7, `v0.1.0.6`). On tag push it builds the Release DLL, packages it
@@ -39,13 +55,14 @@ attached. The manifest is published at
 
 ### Active / blocked
 
-**Task 4 (local resolution).** `ILocalMovieResolver.cs` is updated with
-`Guid? userId`. `LocalMovieResolver.cs` was rewritten but does not compile:
-the Jellyfin 12 API surface for provider-ID retrieval
-(`TryGetProviderId`/`GetProviderId` on `BaseItem`), user lookup
-(`IUserManager`/`GetUserById`), and user-data persistence
-(`SetUserData` extension, `UserItemData` namespace) has not been located yet.
-This is the only remaining build blocker.
+**Task 6 (dashboard configuration).** The embedded `config.html` page and
+the `Plugin`/`PluginSettingsAccessor` plumbing exist, but
+`PluginSettingsAccessor.GetConfiguration()` previously returned defaults
+instead of the saved config. This is now fixed: `Plugin` exposes a static
+`Instance` and `GetConfiguration()` reads `Plugin.Instance.Configuration`
+with a safe defaults fallback. Server-side validation of the full setting
+set (presets, clamps, environment-token precedence, blank-password
+preservation) still needs verification against the UI.
 
 ## Commands and results
 
@@ -54,12 +71,15 @@ cd C:\Dev\Jellyfin.Plugin.SmartTmdb
 dotnet build
   Build succeeded.
     0 Warning(s)
-    0 Error(s)          # Task 4 source currently excluded/broken
+    0 Error(s)
+
+dotnet format --verify-no-changes
+  exit 0 (no formatting or analyzer changes needed)
 
 dotnet test
-  Passed!  - Failed: 0, Passed: 63, Skipped: 0, Total: 63
+  Passed!  - Failed: 0, Passed: 72, Skipped: 0, Total: 72
 
-# Release workflow (run #6, tag v0.1.0.5): success
+# Release workflow (run #7, tag v0.1.0.6): success
 ```
 
 ## Decisions
@@ -76,6 +96,9 @@ dotnet test
   `Emby.Server.Implementations/Updates/InstallationManager.cs` computes
   `MD5.HashDataAsync(stream)` and compares it case-insensitively against
   the manifest value. SHA256 is rejected.
+- `TreatWarningsAsErrors` is enabled on both the production and test
+  projects; the test project previously silently swallowed xUnit analyzer
+  warnings.
 
 ## Discrepancies
 
@@ -106,13 +129,29 @@ dotnet test
    uses `SimilarItemsQuery.User.Id` for user context.
 
 7. **MediaBrowser.Providers namespace does not exist in Jellyfin 12.**
-   `IRemoteSimilarItemsProvider<>` and `SimilarItemReference` are declared in
-   `MediaBrowser.Controller.Library`, not `MediaBrowser.Providers`.
+    `IRemoteSimilarItemsProvider<>` and `SimilarItemReference` are declared in
+    `MediaBrowser.Controller.Library`, not `MediaBrowser.Providers`.
+
+8. **`InternalItemsQuery` is not nested under `ILibraryManager`.** It lives
+    in `MediaBrowser.Controller.Entities`. Its `ExcludeItemIds` is a settable
+    `Guid[]`, while `SimilarItemsQuery.ExcludeItemIds` is
+    `IReadOnlyList<Guid>`.
+
+9. **`BasePlugin<T>.Configuration` has a protected setter.** Tests that need
+    to seed saved config must set it via reflection
+    (`GetProperty("Configuration")!.SetValue(plugin, value)`).
+
+10. **`dotnet format` cannot auto-fix xUnit analyzer warnings.** xUnit1031
+    (blocking `.Result`) and xUnit1051 (`CancellationToken`) are reported but
+    have no associated code fix, so the gate is cleared by fixing them by
+    hand rather than by excluding them.
 
 ## Remaining risks
 
-- Task 4 build failures block the full solution from compiling; the rest of
-  the pipeline (provider, tests, release) is green.
 - Manual integration tests require a disposable Jellyfin 12.0.0 instance;
   the automated suite passes and the manual test plan is documented in
   `docs/MANUAL_TESTS.md`.
+- Dashboard configuration UI (Task 6) still needs end-to-end verification
+  that every visible setting maps to documented behavior and that saving
+  a blank password field preserves an existing token unless Clear is
+  chosen.

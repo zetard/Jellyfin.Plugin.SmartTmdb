@@ -1,5 +1,10 @@
 using System;
 using Jellyfin.Plugin.SmartTmdb.Configuration;
+using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Plugins;
+using MediaBrowser.Model.Serialization;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace Jellyfin.Plugin.SmartTmdb.Tests;
@@ -69,6 +74,64 @@ public class PluginSettingsAccessorTests
         bool isFromEnv = PluginSettingsAccessor.IsTokenFromEnvironment();
 
         Assert.True(isFromEnv);
+    }
+
+    [Fact]
+    public void GetConfiguration_ReturnsSavedConfig_WhenPluginInstanceIsSet()
+    {
+        var saved = new PluginConfiguration
+        {
+            ApiReadAccessToken = "saved-token",
+            Preset = RecommendationPreset.Mainstream,
+            WatchedMode = WatchedMode.UnwatchedOnly,
+            MinimumVoteAverage = 7.0,
+            MinimumVoteCount = 500,
+        };
+
+        var pathsMock = new Mock<IApplicationPaths>();
+        pathsMock.Setup(p => p.ProgramDataPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-data"));
+        pathsMock.Setup(p => p.WebPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-web"));
+        pathsMock.Setup(p => p.ProgramSystemPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-sys"));
+        pathsMock.Setup(p => p.DataPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-data"));
+        pathsMock.Setup(p => p.ImageCachePath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-cache"));
+        pathsMock.Setup(p => p.PluginsPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-plugins"));
+        pathsMock.Setup(p => p.PluginConfigurationsPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-configs"));
+        pathsMock.Setup(p => p.LogDirectoryPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-logs"));
+        pathsMock.Setup(p => p.ConfigurationDirectoryPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-cfg"));
+        pathsMock.Setup(p => p.SystemConfigurationFilePath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-system.xml"));
+        pathsMock.Setup(p => p.CachePath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-cache"));
+        pathsMock.Setup(p => p.TempDirectory).Returns(Path.GetTempPath());
+        pathsMock.Setup(p => p.VirtualDataPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-virtual"));
+        pathsMock.Setup(p => p.TrickplayPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-trickplay"));
+        pathsMock.Setup(p => p.BackupPath).Returns(Path.Combine(Path.GetTempPath(), "smarttmdb-backup"));
+
+        var plugin = new Plugin(
+            pathsMock.Object,
+            new Mock<IXmlSerializer>().Object);
+        typeof(BasePlugin<PluginConfiguration>)
+            .GetProperty("Configuration")!
+            .SetValue(plugin, saved);
+        var accessor = new PluginSettingsAccessor(new Mock<ILogger<PluginSettingsAccessor>>().Object);
+
+        PluginConfiguration result = accessor.GetConfiguration();
+
+        Assert.Equal("saved-token", result.ApiReadAccessToken);
+        Assert.Equal(RecommendationPreset.Mainstream, result.Preset);
+        Assert.Equal(WatchedMode.UnwatchedOnly, result.WatchedMode);
+        Assert.Equal(7.0, result.MinimumVoteAverage);
+        Assert.Equal(500, result.MinimumVoteCount);
+    }
+
+    [Fact]
+    public void GetConfiguration_ReturnsDefaults_WhenPluginInstanceIsNotSet()
+    {
+        Plugin.Instance = null;
+        var accessor = new PluginSettingsAccessor(new Mock<ILogger<PluginSettingsAccessor>>().Object);
+
+        PluginConfiguration result = accessor.GetConfiguration();
+
+        Assert.Equal(string.Empty, result.ApiReadAccessToken);
+        Assert.Equal(RecommendationPreset.Balanced, result.Preset);
     }
 
     [Fact]

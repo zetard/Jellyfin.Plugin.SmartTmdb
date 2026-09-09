@@ -35,7 +35,8 @@ public interface ILocalMovieResolver
     /// </summary>
     /// <param name="tmdbIds">TMDB IDs to resolve.</param>
     /// <param name="userId">Optional user ID for watched-state personalization.</param>
+    /// <param name="excludeItemIds">Local item IDs requested by Jellyfin to exclude.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Dictionary mapping TMDB ID to local movie resolution result.</returns>
-    Task<IReadOnlyDictionary<int, LocalMovieResolution>> ResolveAsync(IReadOnlyList<int> tmdbIds, Guid? userId, CancellationToken cancellationToken);
+    Task<IReadOnlyDictionary<int, LocalMovieResolution>> ResolveAsync(IReadOnlyList<int> tmdbIds, Guid? userId, IReadOnlyList<Guid> excludeItemIds, CancellationToken cancellationToken);
 }

@@ -32,9 +32,9 @@ public class MemoryRawTmdbCacheTests
     public async Task GetAsync_ReturnsNull_AfterExpiry()
     {
         MemoryRawTmdbCache cache = new MemoryRawTmdbCache();
-        await cache.SetAsync("key", "value", TimeSpan.FromMilliseconds(1), CancellationToken.None);
-        await Task.Delay(50);
-        string? value = await cache.GetAsync("key", CancellationToken.None);
+        await cache.SetAsync("key", "value", TimeSpan.FromMilliseconds(1), TestContext.Current.CancellationToken);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+        string? value = await cache.GetAsync("key", TestContext.Current.CancellationToken);
         Assert.Null(value);
     }
 
