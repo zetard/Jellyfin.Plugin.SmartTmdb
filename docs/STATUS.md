@@ -42,7 +42,7 @@ built larger than `query.Limit` before local resolution, results are capped at
 remains null.
 
 **Release workflow.** `.github/workflows/release.yml` is fully green
-(run #7, `v0.1.0.6`). On tag push it builds the Release DLL, packages it
+(run #9, `v0.1.0.9`). On tag push it builds the Release DLL, packages it
 into `Jellyfin.Plugin.SmartTmdb_<version>.zip`, computes an **MD5**
 checksum (the catalog installer in
 `Emby.Server.Implementations/Updates/InstallationManager.cs` validates
@@ -56,13 +56,15 @@ attached. The manifest is published at
 ### Active / blocked
 
 **Task 6 (dashboard configuration).** The embedded `config.html` page and
-the `Plugin`/`PluginSettingsAccessor` plumbing exist, but
-`PluginSettingsAccessor.GetConfiguration()` previously returned defaults
-instead of the saved config. This is now fixed: `Plugin` exposes a static
-`Instance` and `GetConfiguration()` reads `Plugin.Instance.Configuration`
-with a safe defaults fallback. Server-side validation of the full setting
-set (presets, clamps, environment-token precedence, blank-password
-preservation) still needs verification against the UI.
+the `Plugin`/`PluginSettingsAccessor` plumbing exist. `PluginSettingsAccessor.GetConfiguration()`
+previously returned defaults instead of the saved config; this is now fixed:
+`Plugin` exposes a static `Instance` and `GetConfiguration()` reads `Plugin.Instance.Configuration`
+with a safe defaults fallback. The page's `pageshow` handler previously had a
+`.then` with no `.catch`, so any server failure left the spinner visible
+indefinitely; it now hides the loader on both paths and reports the failure in
+the status bar. Server-side validation of the full setting set (presets,
+clamps, environment-token precedence, blank-password preservation) still needs
+verification against the UI.
 
 ## Commands and results
 
@@ -79,7 +81,7 @@ dotnet format --verify-no-changes
 dotnet test
   Passed!  - Failed: 0, Passed: 72, Skipped: 0, Total: 72
 
-# Release workflow (run #7, tag v0.1.0.6): success
+# Release workflow (run #9, tag v0.1.0.9): success
 ```
 
 ## Decisions
