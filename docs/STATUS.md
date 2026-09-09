@@ -53,6 +53,19 @@ commits that back to master, and creates a GitHub release with the zip
 attached. The manifest is published at
 `https://raw.githubusercontent.com/zetard/Jellyfin.Plugin.SmartTmdb/master/manifest.json`.
 
+**Release procedure (do not hand-edit the manifest).** To cut a release:
+`dotnet build --configuration Release` locally to verify, then
+`git tag -a vX.Y.Z -m "Release vX.Y.Z"` and `git push origin vX.Y.Z`. The
+workflow builds the Release DLL, packages the zip, computes the MD5,
+**rewrites `manifest.json` itself and commits it back to master**, and
+creates the GitHub release with the zip attached. Do not stage or commit
+`manifest.json` manually — it is redundant and produces a divergent commit
+that `git push origin master` then rejects as a non-fast-forward. Only commit
+source/docs changes; the workflow owns the manifest. Verify afterward with
+the GitHub Contents API (not `raw.githubusercontent.com`, which serves a
+stale CDN cache of the previous blob) that the new `version` entry is present
+on `master`.
+
 ### Active / blocked
 
 **Task 6 (dashboard configuration).** The embedded `config.html` page and
