@@ -8,12 +8,12 @@
     "category": "Metadata",
     "versions": [
       {
-        "version": "0.1.0.7",
-        "changelog": "Release v0.1.0.7",
+        "version": "0.1.0.8",
+        "changelog": "Release v0.1.0.8",
         "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://github.com/zetard/Jellyfin.Plugin.SmartTmdb/releases/download/v0.1.0.7/Jellyfin.Plugin.SmartTmdb_0.1.0.7.zip",
-        "checksum": "7956363D361E8D044B01DECB75912BE0",
-        "timestamp": "2026-09-09T17:41:19Z"
+        "sourceUrl": "https://github.com/zetard/Jellyfin.Plugin.SmartTmdb/releases/download/v0.1.0.8/Jellyfin.Plugin.SmartTmdb_0.1.0.8.zip",
+        "checksum": "FBC2E0C08DE612236AE4069E7B2122F6",
+        "timestamp": "2026-09-09T18:06:33Z"
       }
     ]
   }
