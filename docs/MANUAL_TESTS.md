@@ -8,7 +8,25 @@ These are the manual integration tests for Task 8. They require a disposable Jel
 2. Install the plugin and configure a valid TMDB token.
 3. Add a test movie library with known TMDB IDs (e.g., Inception `id: 27205`, The Dark Knight `id: 155`, etc.).
 
-## Test Cases
+## Automated Test Matrix (Section 14)
+
+The automated unit tests cover the following areas. Run `dotnet test` to verify.
+
+| Area | Covered by |
+|---|---|
+| Configuration | `SettingsSnapshotTests` — defaults, each preset, Custom normalization, zero/negative/NaN weights, page/timeout/cache clamps, environment-token precedence. |
+| Authentication | `TmdbClientTests` — Bearer header present; token absent from URI, logs, exceptions, and cache key. |
+| Pagination | `CandidateAggregatorTests` — duplicate across pages. `TmdbClientTests` — page parameters. |
+| Aggregation | `CandidateAggregatorTests` — candidate only in recommendations, only in similar, in both, duplicate across pages, source item returned by TMDB. |
+| Filters | `CandidateScorerTests` — adult, vote average, vote count, strict era, strict language, watched only. |
+| Scoring | `CandidateScorerTests` — all feature boundaries, missing fields, franchise modes, watched preference, popularity ± direction, stable tie, clamp. |
+| Collection | DTOs and `TmdbClient.GetCollectionAsync` implemented; collection-aware scoring is scaffolded in `RecommendationCandidate` and `CandidateScorer`. Full collection logic is deferred to V2. |
+| Local resolver | `LocalMovieResolverTests` — no matches, partial matches, non-movie item with same provider ID, null user. |
+| HTTP failures | `TmdbClientTests` — 400, 401, 403, 404, 429, 500, malformed JSON, timeout, cancellation. |
+| Provider | `SmartTmdbMovieProvider` implemented; provider-level integration requires running Jellyfin instance. |
+| Privacy/cache | `MemoryRawTmdbCacheTests` — raw cache shared safely; final results are not core-cached; user A watched state never changes user B output by design (watched state is attached per-request, not cached). |
+
+## Manual Test Cases
 
 ### 1. Plugin loads with no assembly errors
 

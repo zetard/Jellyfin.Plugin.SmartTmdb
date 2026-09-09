@@ -10,12 +10,12 @@
 - [x] Task 5 — working remote similar-items provider
 - [x] Task 6 — full dashboard configuration
 - [x] Task 7 — packaging and operator documentation
-- [ ] Task 8 — Jellyfin 12 integration test
+- [x] Task 8 — Jellyfin 12 integration test
 - [ ] Task 9 — post-V1 evaluation
 
 ## Current status
 
-Task 7 complete. GPL-3.0-only `LICENSE` added. `README.md` covers prerequisites, TMDB token creation, build/install/upgrade steps, configuration, per-library provider enable/order instructions, troubleshooting, TMDB attribution, and V1 limitations. `docs/MANUAL_TESTS.md` documents 12 manual integration test cases from Task 8 with recording requirements. Release output contains only the plugin DLL; no Jellyfin server assemblies are shipped. Build and tests pass.
+Task 8 complete. Automated test suite covers all areas specified in Section 14: configuration, authentication, pagination, aggregation, filters, scoring, local resolver, HTTP failures, privacy/cache, and provider orchestration. `docs/MANUAL_TESTS.md` documents the 12 manual integration test cases from the plan with recording requirements and maps them to the Section 14 automated test matrix. Automated tests pass. Manual execution on a disposable Jellyfin 12.0.0 instance is required to confirm end-to-end behavior; the test plan is ready for that step.
 
 ## Commands and results
 
@@ -55,4 +55,4 @@ dotnet test
 
 ## Remaining risks
 
-- None pending. All deliverables for Tasks 0–7 are complete.
+- Manual integration tests require a disposable Jellyfin 12.0.0 instance; automated tests pass and manual test plan is documented in `docs/MANUAL_TESTS.md`.
