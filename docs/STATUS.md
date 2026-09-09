@@ -68,16 +68,22 @@ on `master`.
 
 ### Active / blocked
 
-**Task 6 (dashboard configuration).** The embedded `config.html` page and
-the `Plugin`/`PluginSettingsAccessor` plumbing exist. `PluginSettingsAccessor.GetConfiguration()`
-previously returned defaults instead of the saved config; this is now fixed:
-`Plugin` exposes a static `Instance` and `GetConfiguration()` reads `Plugin.Instance.Configuration`
-with a safe defaults fallback. The page's `pageshow` handler previously had a
-`.then` with no `.catch`, so any server failure left the spinner visible
-indefinitely; it now hides the loader on both paths and reports the failure in
-the status bar. Server-side validation of the full setting set (presets,
-clamps, environment-token precedence, blank-password preservation) still needs
-verification against the UI.
+**Configuration save returns HTTP 500.** `POST /Plugins/{id}/Configuration`
+fails because `BasePluginOfT.SaveConfiguration` persists the plugin
+configuration with `System.Xml.XmlSerializer`, which requires every
+persisted type to have a public parameterless constructor. `ScoringWeights`
+was a C# `record` with positional parameters — it has none — so any save
+that included a populated `CustomWeights` threw
+`InvalidOperationException: ScoringWeights cannot be serialized because it
+does not have a parameterless constructor`, surfacing as a 500 with a
+`text/plain` body. Fixed by converting `ScoringWeights` from a `record` to a
+plain class with a public parameterless constructor and get/set properties
+(`ScoringWeights.cs`); `SettingsSnapshot` was updated from `with` expressions
+to explicit `new ScoringWeights(...)` construction. Added regression tests in
+`ConfigurationSerializationTests.cs` that round-trip `ScoringWeights` and
+`PluginConfiguration` through `System.Xml.Serialization.XmlSerializer`. The
+test project now also references `System.Xml.XmlSerializer` so the gate can
+exercise the same serializer the server uses.
 
 ## Commands and results
 
@@ -92,7 +98,7 @@ dotnet format --verify-no-changes
   exit 0 (no formatting or analyzer changes needed)
 
 dotnet test
-  Passed!  - Failed: 0, Passed: 72, Skipped: 0, Total: 72
+  Passed!  - Failed: 0, Passed: 74, Skipped: 0, Total: 74
 
 # Release workflow (run #9, tag v0.1.0.9): success
 ```
@@ -160,6 +166,17 @@ dotnet test
     (blocking `.Result`) and xUnit1051 (`CancellationToken`) are reported but
     have no associated code fix, so the gate is cleared by fixing them by
     hand rather than by excluding them.
+
+11. **`ScoringWeights` was a `record` with positional parameters.**
+    `System.Xml.XmlSerializer` (used by `BasePluginOfT.SaveConfiguration` on
+    save) requires a public parameterless constructor, so any save that
+    included a populated `CustomWeights` threw an `InvalidOperationException`
+    that surfaced as an HTTP 500 on `POST /Plugins/{id}/Configuration`. It is
+    now a plain class with a parameterless constructor and get/set
+    properties; `SettingsSnapshot` was updated from `with` expressions to
+    explicit `new ScoringWeights(...)` construction. The test project now
+    references `System.Xml.XmlSerializer` so the gate can exercise the same
+    serializer the server uses.
 
 ## Remaining risks
 

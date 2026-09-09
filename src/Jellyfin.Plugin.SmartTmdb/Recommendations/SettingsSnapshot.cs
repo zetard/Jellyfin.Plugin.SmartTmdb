@@ -45,20 +45,24 @@ public sealed class SettingsSnapshot
             _ => ScoringWeights.Balanced,
         };
 
-        weights = weights with
-        {
-            RecommendationRank = double.IsNaN(weights.RecommendationRank) || double.IsInfinity(weights.RecommendationRank) || weights.RecommendationRank < 0 ? 0 : weights.RecommendationRank,
-            SimilarRank = double.IsNaN(weights.SimilarRank) || double.IsInfinity(weights.SimilarRank) || weights.SimilarRank < 0 ? 0 : weights.SimilarRank,
-            Genre = double.IsNaN(weights.Genre) || double.IsInfinity(weights.Genre) || weights.Genre < 0 ? 0 : weights.Genre,
-            Era = double.IsNaN(weights.Era) || double.IsInfinity(weights.Era) || weights.Era < 0 ? 0 : weights.Era,
-            Quality = double.IsNaN(weights.Quality) || double.IsInfinity(weights.Quality) || weights.Quality < 0 ? 0 : weights.Quality,
-            Popularity = double.IsNaN(weights.Popularity) || double.IsInfinity(weights.Popularity) || weights.Popularity < 0 ? 0 : weights.Popularity,
-        };
+        weights = new ScoringWeights(
+            SanitizeWeight(weights.RecommendationRank),
+            SanitizeWeight(weights.SimilarRank),
+            SanitizeWeight(weights.Genre),
+            SanitizeWeight(weights.Era),
+            SanitizeWeight(weights.Quality),
+            SanitizeWeight(weights.Popularity));
 
         ScoringWeights normalizedWeights = weights;
         if (PopularityBias == 0)
         {
-            normalizedWeights = weights with { Popularity = 0 };
+            normalizedWeights = new ScoringWeights(
+                weights.RecommendationRank,
+                weights.SimilarRank,
+                weights.Genre,
+                weights.Era,
+                weights.Quality,
+                0);
         }
 
         double totalWeight = normalizedWeights.RecommendationRank + normalizedWeights.SimilarRank + normalizedWeights.Genre + normalizedWeights.Era + normalizedWeights.Quality + normalizedWeights.Popularity;
@@ -68,15 +72,18 @@ public sealed class SettingsSnapshot
         }
 
         CustomWeights = weights;
-        NormalizedWeights = normalizedWeights with
-        {
-            RecommendationRank = normalizedWeights.RecommendationRank / totalWeight,
-            SimilarRank = normalizedWeights.SimilarRank / totalWeight,
-            Genre = normalizedWeights.Genre / totalWeight,
-            Era = normalizedWeights.Era / totalWeight,
-            Quality = normalizedWeights.Quality / totalWeight,
-            Popularity = normalizedWeights.Popularity / totalWeight,
-        };
+        NormalizedWeights = new ScoringWeights(
+            normalizedWeights.RecommendationRank / totalWeight,
+            normalizedWeights.SimilarRank / totalWeight,
+            normalizedWeights.Genre / totalWeight,
+            normalizedWeights.Era / totalWeight,
+            normalizedWeights.Quality / totalWeight,
+            normalizedWeights.Popularity / totalWeight);
+    }
+
+    private static double SanitizeWeight(double value)
+    {
+        return double.IsNaN(value) || double.IsInfinity(value) || value < 0 ? 0 : value;
     }
 
     /// <summary>
