@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Compute checksum
+        id: checksum
+        run: |
+          $dll = "src/Jellyfin.Plugin.SmartTmdb/bin/Release/net10.0/Jellyfin.Plugin.SmartTmdb.dll"
+          $hash = (Get-FileHash -Path $dll -Algorithm SHA256).Hash
+          echo "checksum=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            src/Jellyfin.Plugin.SmartTmdb/bin/Release/net10.0/Jellyfin.Plugin.SmartTmdb.dll
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
