@@ -43,7 +43,7 @@ jobs:
         shell: pwsh
         run: |
           $zip = "${{ steps.package.outputs.zip }}"
-          $hash = (Get-FileHash -Path $zip -Algorithm SHA256).Hash
+          $hash = (Get-FileHash -Path $zip -Algorithm MD5).Hash
           "checksum=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Update manifest.json
