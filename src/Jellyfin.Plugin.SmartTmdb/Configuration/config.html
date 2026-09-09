@@ -14,7 +14,10 @@
     </style>
 </head>
 <body>
-    <h1>Smart TMDB Recommendations</h1>
+    <div id="SmartTmdbConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>Smart TMDB Recommendations</h1>
 
     <div class="env-note" id="envNote" style="display: none;">
         <strong>Token configured by environment variable.</strong><br>
@@ -176,42 +179,24 @@
         <p><strong>TMDB Attribution:</strong> This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
         <p><a href="https://www.themoviedb.org/" target="_blank">Visit TMDB</a></p>
     </div>
+            </div>
+        </div>
 
-    <script>
-        (function() {
-            const envNote = document.getElementById('envNote');
-            const apiTokenInput = document.getElementById('apiToken');
-            const clearTokenButton = document.getElementById('clearToken');
-            const presetSelect = document.getElementById('preset');
-            const customWeightsSection = document.getElementById('customWeightsSection');
-            const saveButton = document.getElementById('saveButton');
-            const statusSpan = document.getElementById('status');
+    <script type="text/javascript">
+        var SmartTmdbConfig = {
+            pluginUniqueId: '20410cf8-e5cd-4307-a355-87c6b66c9ae6'
+        };
 
-            function updateCustomWeightsVisibility() {
-                if (presetSelect.value === '3') {
-                    customWeightsSection.style.display = 'block';
-                } else {
-                    customWeightsSection.style.display = 'none';
-                }
-            }
-
-            function showStatus(message, isError) {
-                statusSpan.textContent = message;
-                statusSpan.style.color = isError ? 'red' : 'green';
-                setTimeout(() => { statusSpan.textContent = ''; }, 5000);
-            }
-
-            async function loadConfig() {
-                try {
-                    const response = await ApiClient.getPluginConfiguration('20410cf8-e5cd-4307-a355-87c6b66c9ae6');
-                    const config = response || {};
-
+        document.querySelector('#SmartTmdbConfigPage')
+            .addEventListener('pageshow', function() {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(SmartTmdbConfig.pluginUniqueId).then(function (config) {
+                    config = config || {};
                     if (config.ApiReadAccessToken) {
-                        apiTokenInput.value = '••••••••••••';
+                        document.getElementById('apiToken').value = '••••••••••••';
                     } else {
-                        apiTokenInput.value = '';
+                        document.getElementById('apiToken').value = '';
                     }
-
                     document.getElementById('watchedMode').value = config.WatchedMode || 0;
                     document.getElementById('franchiseMode').value = config.FranchiseMode || 0;
                     document.getElementById('eraMode').value = config.EraMode || 0;
@@ -226,7 +211,6 @@
                     document.getElementById('requestTimeoutSeconds').value = config.RequestTimeoutSeconds ?? 10;
                     document.getElementById('popularityBias').value = config.PopularityBias ?? 0;
                     document.getElementById('eraHalfLifeYears').value = config.EraHalfLifeYears ?? 15;
-
                     if (config.CustomWeights) {
                         document.getElementById('recWeight').value = config.CustomWeights.RecommendationRank ?? 0;
                         document.getElementById('simWeight').value = config.CustomWeights.SimilarRank ?? 0;
@@ -235,62 +219,84 @@
                         document.getElementById('qualityWeight').value = config.CustomWeights.Quality ?? 0;
                         document.getElementById('popularityWeight').value = config.CustomWeights.Popularity ?? 0;
                     }
-
-                    presetSelect.value = config.Preset ?? 0;
+                    document.getElementById('preset').value = config.Preset ?? 0;
                     updateCustomWeightsVisibility();
-                } catch (e) {
-                    showStatus('Failed to load configuration: ' + e.message, true);
-                }
-            }
-
-            async function saveConfig() {
-                try {
-                    const preset = parseInt(presetSelect.value);
-                    const config = {
-                        ApiReadAccessToken: apiTokenInput.value && apiTokenInput.value !== '••••••••••••' ? apiTokenInput.value : '',
-                        Preset: preset,
-                        WatchedMode: parseInt(document.getElementById('watchedMode').value),
-                        FranchiseMode: parseInt(document.getElementById('franchiseMode').value),
-                        EraMode: parseInt(document.getElementById('eraMode').value),
-                        LanguageMode: parseInt(document.getElementById('languageMode').value),
-                        MinimumVoteAverage: parseFloat(document.getElementById('minimumVoteAverage').value) || 0,
-                        MinimumVoteCount: parseInt(document.getElementById('minimumVoteCount').value) || 0,
-                        IncludeAdult: document.getElementById('includeAdult').checked,
-                        UseRecommendations: true,
-                        UseSimilar: true,
-                        RecommendationPages: Math.min(5, Math.max(1, parseInt(document.getElementById('recommendationPages').value) || 3)),
-                        SimilarPages: Math.min(5, Math.max(1, parseInt(document.getElementById('similarPages').value) || 1)),
-                        ResponseLanguage: document.getElementById('responseLanguage').value || 'auto',
-                        RawCacheHours: Math.min(168, Math.max(1, parseInt(document.getElementById('rawCacheHours').value) || 24)),
-                        RequestTimeoutSeconds: Math.min(60, Math.max(1, parseInt(document.getElementById('requestTimeoutSeconds').value) || 10)),
-                        PopularityBias: Math.min(2, Math.max(-2, parseInt(document.getElementById('popularityBias').value) || 0)),
-                        EraHalfLifeYears: Math.min(100, Math.max(1, parseInt(document.getElementById('eraHalfLifeYears').value) || 15)),
-                        CustomWeights: preset === 3 ? {
-                            RecommendationRank: parseFloat(document.getElementById('recWeight').value) || 0,
-                            SimilarRank: parseFloat(document.getElementById('simWeight').value) || 0,
-                            Genre: parseFloat(document.getElementById('genreWeight').value) || 0,
-                            Era: parseFloat(document.getElementById('eraWeight').value) || 0,
-                            Quality: parseFloat(document.getElementById('qualityWeight').value) || 0,
-                            Popularity: parseFloat(document.getElementById('popularityWeight').value) || 0
-                        } : { RecommendationRank: 0.55, SimilarRank: 0.15, Genre: 0.10, Era: 0.05, Quality: 0.10, Popularity: 0.05 }
-                    };
-
-                    await ApiClient.updatePluginConfiguration('20410cf8-e5cd-4307-a355-87c6b66c9ae6', config);
-                    showStatus('Configuration saved successfully.', false);
-                } catch (e) {
-                    showStatus('Failed to save configuration: ' + e.message, true);
-                }
-            }
-
-            presetSelect.addEventListener('change', updateCustomWeightsVisibility);
-            saveButton.addEventListener('click', saveConfig);
-            clearTokenButton.addEventListener('click', function() {
-                apiTokenInput.value = '';
-                apiTokenInput.focus();
+                    if (config.IsTokenFromEnvironment) {
+                        var envNote = document.getElementById('envNote');
+                        envNote.style.display = 'block';
+                        document.getElementById('apiToken').disabled = true;
+                    }
+                    Dashboard.hideLoadingMsg();
+                });
             });
 
-            loadConfig();
-        })();
+        function updateCustomWeightsVisibility() {
+            var preset = document.getElementById('preset').value;
+            var section = document.getElementById('customWeightsSection');
+            if (preset === '3') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function showStatus(message, isError) {
+            var span = document.getElementById('status');
+            span.textContent = message;
+            span.style.color = isError ? 'red' : 'green';
+            setTimeout(function () { span.textContent = ''; }, 5000);
+        }
+
+        document.getElementById('saveButton').addEventListener('click', function() {
+            Dashboard.showLoadingMsg();
+            var preset = parseInt(document.getElementById('preset').value);
+            var token = document.getElementById('apiToken').value;
+            var config = {
+                ApiReadAccessToken: token && token !== '••••••••••••' ? token : '',
+                Preset: preset,
+                WatchedMode: parseInt(document.getElementById('watchedMode').value),
+                FranchiseMode: parseInt(document.getElementById('franchiseMode').value),
+                EraMode: parseInt(document.getElementById('eraMode').value),
+                LanguageMode: parseInt(document.getElementById('languageMode').value),
+                MinimumVoteAverage: parseFloat(document.getElementById('minimumVoteAverage').value) || 0,
+                MinimumVoteCount: parseInt(document.getElementById('minimumVoteCount').value) || 0,
+                IncludeAdult: document.getElementById('includeAdult').checked,
+                UseRecommendations: true,
+                UseSimilar: true,
+                RecommendationPages: Math.min(5, Math.max(1, parseInt(document.getElementById('recommendationPages').value) || 3)),
+                SimilarPages: Math.min(5, Math.max(1, parseInt(document.getElementById('similarPages').value) || 1)),
+                ResponseLanguage: document.getElementById('responseLanguage').value || 'auto',
+                RawCacheHours: Math.min(168, Math.max(1, parseInt(document.getElementById('rawCacheHours').value) || 24)),
+                RequestTimeoutSeconds: Math.min(60, Math.max(1, parseInt(document.getElementById('requestTimeoutSeconds').value) || 10)),
+                PopularityBias: Math.min(2, Math.max(-2, parseInt(document.getElementById('popularityBias').value) || 0)),
+                EraHalfLifeYears: Math.min(100, Math.max(1, parseInt(document.getElementById('eraHalfLifeYears').value) || 15)),
+                CustomWeights: preset === 3 ? {
+                    RecommendationRank: parseFloat(document.getElementById('recWeight').value) || 0,
+                    SimilarRank: parseFloat(document.getElementById('simWeight').value) || 0,
+                    Genre: parseFloat(document.getElementById('genreWeight').value) || 0,
+                    Era: parseFloat(document.getElementById('eraWeight').value) || 0,
+                    Quality: parseFloat(document.getElementById('qualityWeight').value) || 0,
+                    Popularity: parseFloat(document.getElementById('popularityWeight').value) || 0
+                } : { RecommendationRank: 0.55, SimilarRank: 0.15, Genre: 0.10, Era: 0.05, Quality: 0.10, Popularity: 0.05 }
+            };
+            ApiClient.updatePluginConfiguration(SmartTmdbConfig.pluginUniqueId, config).then(function (result) {
+                Dashboard.processPluginConfigurationUpdateResult(result);
+                showStatus('Configuration saved successfully.', false);
+                Dashboard.hideLoadingMsg();
+            }).catch(function (e) {
+                showStatus('Failed to save configuration: ' + e.message, true);
+                Dashboard.hideLoadingMsg();
+            });
+        });
+
+        document.getElementById('clearToken').addEventListener('click', function() {
+            document.getElementById('apiToken').value = '';
+            document.getElementById('apiToken').focus();
+        });
+
+document.getElementById('preset').addEventListener('change', updateCustomWeightsVisibility);
     </script>
+        </div>
+    </div>
 </body>
 </html>
