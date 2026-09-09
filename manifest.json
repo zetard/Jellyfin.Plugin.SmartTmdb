@@ -1,19 +1,20 @@
-{
-  "plugins": [
-    {
-      "name": "Smart TMDB Recommendations",
-      "guid": "20410cf8-e5cd-4307-a355-87c6b66c9ae6",
-      "version": "0.1.0.4",
-      "description": "Configurable TMDB-based movie recommendations for Jellyfin.",
-      "downloads": [
-        {
-          "version": "0.1.0.4",
-          "url": "https://github.com/zetard/Jellyfin.Plugin.SmartTmdb/releases/download/v0.1.0.4/Jellyfin.Plugin.SmartTmdb.dll",
-          "checksum": "0B59D22607AD8E46E911D410B27D1DD04DF6C5723343DA3E3A55A78ABC4A7DB3",
-          "targetAbi": "12.0.0.0",
-          "framework": "net10.0"
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "guid": "20410cf8-e5cd-4307-a355-87c6b66c9ae6",
+    "name": "Smart TMDB Recommendations",
+    "description": "Configurable TMDB-based movie recommendations for Jellyfin.",
+    "overview": "Configurable TMDB-based movie recommendations for Jellyfin.",
+    "owner": "zetard",
+    "category": "Metadata",
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "changelog": "Initial release",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/zetard/Jellyfin.Plugin.SmartTmdb/releases/download/v0.1.0.0/Jellyfin.Plugin.SmartTmdb_0.1.0.0.zip",
+        "checksum": "3DA90BD3AD0BDD5866531F3DCF6C2A88C72FAC0F5B0C933E1C0891E336DE08A6",
+        "timestamp": "2026-09-09T12:20:00Z"
+      }
+    ]
+  }
+]

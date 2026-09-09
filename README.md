@@ -20,12 +20,29 @@ V1 is limited to **movie item-detail More Like This** only. It does not add Sugg
 
 ## Installation
 
-1. Build the plugin:
-   ```
-   dotnet build --configuration Release
-   ```
-2. Copy `src/Jellyfin.Plugin.SmartTmdb/bin/Release/net10.0/Jellyfin.Plugin.SmartTmdb.dll` to your Jellyfin `plugins/` directory.
+### Option A: Plugin catalog (recommended)
+
+If your Jellyfin instance has the plugin catalog enabled, the plugin is
+available as **Smart TMDB Recommendations**:
+
+1. Go to **Dashboard > Plugins > Catalog**.
+2. Find **Smart TMDB Recommendations**.
+3. Click **Install** and restart Jellyfin.
+
+If the catalog does not show the plugin yet, refresh the catalog or use
+Option B.
+
+### Option B: Manual install
+
+1. Download `Jellyfin.Plugin.SmartTmdb_<version>.zip` from the latest release.
+2. Extract the DLL into your Jellyfin `plugins/` directory.
 3. Restart Jellyfin.
+
+To build from source:
+
+```
+dotnet build --configuration Release
+```
 
 ## Configuration
 

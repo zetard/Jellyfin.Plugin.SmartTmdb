@@ -28,23 +28,50 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore src/Jellyfin.Plugin.SmartTmdb/Jellyfin.Plugin.SmartTmdb.csproj
 
-      - name: Compute checksum
-        id: checksum
+      - name: Package plugin zip
+        id: package
+        shell: pwsh
         run: |
           $dll = "src/Jellyfin.Plugin.SmartTmdb/bin/Release/net10.0/Jellyfin.Plugin.SmartTmdb.dll"
-          $hash = (Get-FileHash -Path $dll -Algorithm SHA256).Hash
-          echo "checksum=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $zip = "Jellyfin.Plugin.SmartTmdb_$version.zip"
+          Compress-Archive -Path $dll -DestinationPath $zip -Force
+          "zip=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Compute checksum
+        id: checksum
+        shell: pwsh
+        run: |
+          $zip = "${{ steps.package.outputs.zip }}"
+          $hash = (Get-FileHash -Path $zip -Algorithm SHA256).Hash
+          "checksum=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Update manifest.json
+        shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart('v')
           $checksum = "${{ steps.checksum.outputs.checksum }}"
-          $manifest = Get-Content manifest.json | ConvertFrom-Json
-          $plugin = $manifest.plugins[0]
-          $plugin.version = $version
-          $plugin.downloads[0].version = $version
-          $plugin.downloads[0].url = "https://github.com/${{ github.repository }}/releases/download/v$version/Jellyfin.Plugin.SmartTmdb.dll"
-          $plugin.downloads[0].checksum = $checksum
+          $ref = "${{ github.ref_name }}"
+          $repo = "${{ github.repository }}"
+          $entry = [ordered]@{
+            version = $version
+            changelog = "Release $ref"
+            targetAbi = "12.0.0.0"
+            sourceUrl = "https://github.com/$repo/releases/download/$ref/Jellyfin.Plugin.SmartTmdb_$version.zip"
+            checksum = $checksum
+            timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+          }
+          $manifest = @(
+            [ordered]@{
+              guid = "20410cf8-e5cd-4307-a355-87c6b66c9ae6"
+              name = "Smart TMDB Recommendations"
+              description = "Configurable TMDB-based movie recommendations for Jellyfin."
+              overview = "Configurable TMDB-based movie recommendations for Jellyfin."
+              owner = "zetard"
+              category = "Metadata"
+              versions = @($entry)
+            }
+          )
           $manifest | ConvertTo-Json -Depth 10 | Set-Content manifest.json
 
       - name: Commit updated manifest
@@ -59,7 +86,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            src/Jellyfin.Plugin.SmartTmdb/bin/Release/net10.0/Jellyfin.Plugin.SmartTmdb.dll
+            ${{ steps.package.outputs.zip }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
